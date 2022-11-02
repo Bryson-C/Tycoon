@@ -15,10 +15,10 @@ export class Asset {
         asset.style.height = `${height}px`;
         asset.style.left = `${x}px`;
         asset.style.top = `${y}px`;
-        this.posX = x;
-        this.posY = y;
-        this.posW = width;
-        this.posH = height;
+        this.x = x;
+        this.y = y;
+        this.w = width;
+        this.h = height;
         this.asset = asset;
     }
     static createWithRaw(img, x, y, width, height) {
@@ -39,8 +39,8 @@ export class Resource {
         let countElement = document.createElement('p');
         countElement.textContent = `${name}: 0`;
         countElement.style.position = 'absolute';
-        countElement.style.left = `${asset.posX}px`;
-        countElement.style.top = `${asset.posY + asset.posH}px`;
+        countElement.style.left = `${asset.x}px`;
+        countElement.style.top = `${asset.y + asset.h}px`;
         this.imgElement = asset.asset;
         this.countElement = countElement;
         resourceList.push(this);
@@ -64,11 +64,11 @@ export class Resource {
         if (!(x == -1 || y == -1)) {
             this.imgElement.style.left = `${x}px`;
             this.imgElement.style.top = `${y}px`;
-            this.basAsset.posX = x;
-            this.basAsset.posY = y;
+            this.basAsset.x = x;
+            this.basAsset.y = y;
         }
-        this.countElement.style.left = `${this.basAsset.posX}px`;
-        this.countElement.style.top = `${this.basAsset.posY + this.basAsset.posH}px`;
+        this.countElement.style.left = `${this.basAsset.x}px`;
+        this.countElement.style.top = `${this.basAsset.y + this.basAsset.h}px`;
     }
     save() {
         localStorage.setItem(this.name, this.count.toString());

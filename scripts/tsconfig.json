@@ -1,0 +1,6 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+  },
+  "files": [ "Engine.ts", "Game.ts" ],
+}
