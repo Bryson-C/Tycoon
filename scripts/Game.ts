@@ -1,37 +1,21 @@
 
-import {Resource, Asset} from "./Engine.js";
+import {Image, SaveFeatures, Text, getMousePosition} from "./Engine.js";
+
+let rockCount: number = 0;
+if (SaveFeatures.load('rocks').valid) {
+    rockCount = SaveFeatures.load<number>('rocks').value;
+}
 
 
+let rock = new Image('../Image/stone.png', 0, 0, 128, 128);
+let rockText = new Text(`Rocks: ${rockCount}`, rock._x, rock._y + rock._height);
 
-let resources: Resource[] = [];
-
-
-let rockAsset = new Asset('../Image/rock.jpg', 0,0, 32, 32);
-
-let rocks = new Resource('rocks', rockAsset, resources);
-rocks.addEvent('click', function(){rocks.add(1)});
-rocks.loadIfSaved();
-rocks.move(32, 32);
+rock.addEvent('click', function(){
+    rockCount++;
+    rockText.updateText(`Rocks: ${rockCount}`);
+    SaveFeatures.save<number>('rocks', rockCount)
+});
 
 
-let nftAsset = new Asset('https://variety.com/wp-content/uploads/2022/08/Steven-Galanis-Bored-Ape-Yacht-Club.png?w=631', 100, 100, 32, 32);
-
-let nft = new Resource('nft', nftAsset, resources);
-nft.addEvent('click', function(){nft.add(1)});
-nft.loadIfSaved();
-nft.move(96, 32);
-
-
-let global_tick = setInterval(() => {
-    let iter = 0;
-    for (let item of resources) {
-        item.save();
-        iter += 1;
-    }
-}, 1000);
-
-
-rocks.append(document.body);
-nft.append(document.body);
-
-
+rockText.append(document.body);
+rock.append(document.body);

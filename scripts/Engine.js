@@ -1,92 +1,107 @@
 class __PositionElement {
-    constructor(x, y, width, height) {
+    constructor(x, y, width = -1, height = -1) {
         this._x = x;
         this._y = y;
-        this._width = width;
-        this._height = height;
+        if (width > 0)
+            this._width = width;
+        if (height > 0)
+            this._height = height;
+    }
+    move(x, y) {
+        this._x += x;
+        this._y += y;
+    }
+    moveTo(x, y) {
+        this._x = x;
+        this._y = y;
     }
 }
-export class Asset {
-    constructor(img, x, y, width, height) {
-        let asset = document.createElement('img');
-        asset.style.position = 'absolute';
-        asset.src = img;
-        asset.style.width = `${width}px`;
-        asset.style.height = `${height}px`;
-        asset.style.left = `${x}px`;
-        asset.style.top = `${y}px`;
-        this.x = x;
-        this.y = y;
-        this.w = width;
-        this.h = height;
-        this.asset = asset;
-    }
-    static createWithRaw(img, x, y, width, height) {
-        return new Asset(img, x, y, width, height);
-    }
-    static createWithPos(img, position) {
-        return new Asset(img, position._x, position._y, position._width, position._height);
-    }
-    append(parent) {
-        parent.appendChild(this.asset);
-    }
-}
-export class Resource {
-    constructor(name, asset, resourceList) {
-        this.count = 0;
-        this.name = name;
-        this.basAsset = asset;
-        let countElement = document.createElement('p');
-        countElement.textContent = `${name}: 0`;
-        countElement.style.position = 'absolute';
-        countElement.style.left = `${asset.x}px`;
-        countElement.style.top = `${asset.y + asset.h}px`;
-        this.imgElement = asset.asset;
-        this.countElement = countElement;
-        resourceList.push(this);
+class __AssetElement extends __PositionElement {
+    constructor(type, x, y, w = -1, h = -1) {
+        super(x, y, w, h);
+        let element = document.createElement(type);
+        element.style.position = 'absolute';
+        element.style.left = `${x}px`;
+        element.style.top = `${y}px`;
+        element.style.width = `${w}px`;
+        element.style.height = `${h}px`;
+        this.element = element;
     }
     addEvent(event, callback) {
-        this.imgElement.addEventListener(event, () => callback());
+        this.element.addEventListener(event, (event) => callback(event));
+    }
+    move(x, y) {
+        super.move(x, y);
+        this.element.style.left = `${this._x}px`;
+        this.element.style.top = `${this._y}px`;
+    }
+    moveTo(x, y) {
+        super.moveTo(x, y);
+        this.element.style.left = `${this._x}px`;
+        this.element.style.top = `${this._y}px`;
     }
     append(parent) {
-        parent.appendChild(this.imgElement);
-        parent.appendChild(this.countElement);
+        parent.appendChild(this.element);
     }
-    update() {
-        this.countElement.textContent = `${this.name}: ${this.count}`;
+}
+export class Result {
+    constructor(value, valid) {
+        this.value = value;
+        this.valid = valid;
     }
-    add(count) {
-        this.update();
-        this.count += count;
-        return this.count;
-    }
-    move(x = -1, y = -1) {
-        if (!(x == -1 || y == -1)) {
-            this.imgElement.style.left = `${x}px`;
-            this.imgElement.style.top = `${y}px`;
-            this.basAsset.x = x;
-            this.basAsset.y = y;
+}
+function Some(value) {
+    return new Result(value, true);
+}
+function None() {
+    return new Result(undefined, false);
+}
+let mouse;
+class __MouseFeatures {
+    constructor() {
+        if (mouse === undefined) {
+            window.addEventListener('mouseover', (e) => {
+                this._x = e.x;
+                this._y = e.y;
+            });
+            mouse = this;
         }
-        this.countElement.style.left = `${this.basAsset.x}px`;
-        this.countElement.style.top = `${this.basAsset.y + this.basAsset.h}px`;
     }
-    save() {
-        localStorage.setItem(this.name, this.count.toString());
+}
+new __MouseFeatures();
+export function getMousePosition() {
+    return [mouse._x, mouse._y];
+}
+export class SaveFeatures {
+    static save(name, save) {
+        localStorage.setItem(name, save.toString());
         return true;
     }
-    load() {
-        if (this.name in localStorage) {
-            this.count = Number(localStorage.getItem(this.name));
-            this.update();
-            return true;
+    static load(name) {
+        if (name in localStorage) {
+            return Some((localStorage.getItem(name)));
         }
-        return false;
+        return None();
     }
-    loadIfSaved() {
-        if (this.load())
-            return true;
-        else
-            this.save();
-        return false;
+    static clear(name) {
+        localStorage.removeItem(name);
+        return true;
+    }
+}
+export class Image extends __AssetElement {
+    constructor(src, x, y, w = -1, h = -1) {
+        super('img', x, y, w, h);
+        this.element.src = src;
+    }
+}
+export class Text extends __AssetElement {
+    constructor(text, x, y, w = -1, h = -1) {
+        super('p', x, y, w, h);
+        this.text = text;
+        this.element.innerText = text;
+    }
+    updateText(text) {
+        this.text = text;
+        this.element.innerText = text;
     }
 }
