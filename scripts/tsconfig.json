@@ -2,5 +2,10 @@
   "compilerOptions": {
     "target": "ES6",
   },
-  "files": [ "Engine.ts", "Game.ts" ],
+  "files": [
+    "Position.ts",
+    "ElementBase.ts",
+    "Engine.ts",
+    "Game.ts",
+  ],
 }

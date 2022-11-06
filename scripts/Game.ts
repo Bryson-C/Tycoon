@@ -1,21 +1,51 @@
 
-import {Image, SaveFeatures, Text, getMousePosition} from "./Engine.js";
+import {Image, SaveFeatures, Text, getWindowSize, randomInt, getMousePosition} from "./Engine.js";
 
-let rockCount: number = 0;
-if (SaveFeatures.load('rocks').valid) {
-    rockCount = SaveFeatures.load<number>('rocks').value;
-}
+let background = new Image('https://wallpapercave.com/wp/wp7667538.jpg', 0, 0, getWindowSize()[0], getWindowSize()[1]);
+background.element.setAttribute('draggable', 'false');
+
+let cookie = new Image('../Image/cookie.png', 0, 0, 256, 256);
+cookie.element.setAttribute('draggable', 'false');
+
+cookie.center(background);
+cookie.move(0, -200);
+
+let cookieCount: number = SaveFeatures.loadOr<number>('cookies', 0);
+
+let cookieCountElem = new Text(`${cookieCount} Cookies`, 0,0);
+cookieCountElem.element.style.color = 'white';
+cookieCountElem.move(100,0);
+cookieCountElem.element.style.fontSize = '45px';
 
 
-let rock = new Image('../Image/stone.png', 0, 0, 128, 128);
-let rockText = new Text(`Rocks: ${rockCount}`, rock._x, rock._y + rock._height);
+let cookiesPerClick = 1;
 
-rock.addEvent('click', function(){
-    rockCount++;
-    rockText.updateText(`Rocks: ${rockCount}`);
-    SaveFeatures.save<number>('rocks', rockCount)
+cookie.addEvent('mouseover', function(event) {
+    cookie.scale(10, 10)
+})
+cookie.addEvent('mouseout', function(event) {
+    cookie.scale(-10, -10)
 });
 
+cookie.addEvent('click', function(event) {
+    cookieCount++;
+    cookieCountElem.updateText(`${cookieCount} Cookies`);
 
-rockText.append(document.body);
-rock.append(document.body);
+    SaveFeatures.save<number>('cookies', cookieCount);
+
+    let mouseX = getMousePosition()[0];
+    let mouseY = getMousePosition()[1];
+
+    let cookiePerClickElem = new Text(`+${cookiesPerClick}`, mouseX + randomInt(-100, 120), mouseY + randomInt(-100, 120));
+    cookiePerClickElem.element.style.color = 'white';
+    cookiePerClickElem.element.style.fontSize = '35px';
+    cookiePerClickElem.element.style.pointerEvents = 'none';
+
+    let cookieClickDisplayTimeout = setTimeout(function() {
+        cookiePerClickElem.destroy()
+        clearTimeout(cookieClickDisplayTimeout);
+    }, 1000);
+})
+
+
+

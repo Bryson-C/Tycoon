@@ -1,68 +1,6 @@
 
+import { __ElementBase } from './ElementBase.js'
 
-class __PositionElement {
-    _x: number;
-    _y: number;
-    _width: number;
-    _height: number;
-
-
-    constructor(x: number, y: number, width: number = -1, height: number = -1) {
-        this._x = x;
-        this._y = y;
-        if (width > 0)
-            this._width = width;
-        if (height > 0)
-            this._height = height;
-    }
-
-    move(x: number, y: number) {
-        this._x += x;
-        this._y += y;
-    }
-    moveTo(x: number, y: number) {
-        this._x = x;
-        this._y = y;
-    }
-}
-
-class __AssetElement extends __PositionElement{
-    element: any;
-
-    constructor(type: string, x: number, y: number, w: number = -1, h: number = -1) {
-        super(x,y,w,h);
-
-        let element = document.createElement(type);
-        element.style.position = 'absolute';
-        element.style.left = `${x}px`;
-        element.style.top = `${y}px`;
-        element.style.width = `${w}px`;
-        element.style.height = `${h}px`;
-
-        this.element = element;
-    }
-
-    addEvent(event: string, callback: Function) {
-        this.element.addEventListener(event, (event)=> callback(event));
-    }
-
-    move(x: number, y: number) {
-        super.move(x, y);
-        this.element.style.left = `${this._x}px`;
-        this.element.style.top = `${this._y}px`;
-    }
-    moveTo(x: number, y: number) {
-        super.moveTo(x, y);
-        this.element.style.left = `${this._x}px`;
-        this.element.style.top = `${this._y}px`;
-    }
-
-
-    append(parent: Element) {
-        parent.appendChild(this.element);
-    }
-
-}
 
 export class Result<Type> {
     value: Type;
@@ -82,27 +20,48 @@ function None(): Result<any> {
 }
 
 
-let mouse: __MouseFeatures;
+let mouseFeatures: __MouseFeatures;
+let windowFeatures: __WindowFeatures;
 
+class __WindowFeatures {
+    _width: number;
+    _height: number;
+    _resized: boolean;
+
+    constructor() {
+        if (windowFeatures === undefined) {
+            window.onresize = () => { this._width = window.outerWidth; this._height = window.outerHeight; this._resized = true; }
+            this._width = window.innerWidth;
+            this._height = window.outerHeight;
+            windowFeatures = this;
+        }
+    }
+}
 class __MouseFeatures {
     _x: number;
     _y: number;
     constructor() {
-        if (mouse === undefined) {
-            window.addEventListener('mouseover', (e) => {
+        if (mouseFeatures === undefined) {
+            window.addEventListener('mousemove', (e) => {
                 this._x = e.x;
                 this._y = e.y;
             });
-            mouse = this;
+            mouseFeatures = this;
         }
     }
 }
 
 new __MouseFeatures();
-
+new __WindowFeatures();
 
 export function getMousePosition(): number[] {
-    return [mouse._x, mouse._y];
+    return [mouseFeatures._x, mouseFeatures._y];
+}
+export function getWindowSize(): number[] {
+    return [windowFeatures._width, windowFeatures._height];
+}
+export function windowResized(): boolean {
+    return windowFeatures._resized;
 }
 
 
@@ -113,9 +72,14 @@ export class SaveFeatures {
     }
     static load<Type>(name: string): Result<Type> {
         if (name in localStorage) {
-            return Some<Type>((localStorage.getItem(name)) as Type);
+            if (localStorage.getItem(name) !== undefined && localStorage.getItem(name) !== null)
+                return Some<Type>((localStorage.getItem(name)) as Type);
         }
         return None();
+    }
+    static loadOr<Type>(name: string, or: Type): Type {
+        let data = this.load<Type>(name);
+        return (data.valid) ? data.value as Type : or;
     }
     static clear(name: string): boolean {
         localStorage.removeItem(name);
@@ -123,17 +87,19 @@ export class SaveFeatures {
     }
 }
 
-export class Image extends __AssetElement {
+export class Image extends __ElementBase {
 
     constructor(src: string, x: number, y: number, w: number = -1, h: number = -1) {
         super('img', x, y, w, h);
 
         this.element.src = src;
+        this.element.alt = 'Image Failed Loading';
+        document.body.append(this.element);
     }
 
 }
 
-export class Text extends __AssetElement {
+export class Text extends __ElementBase {
     text: string;
 
     constructor(text: string, x: number, y: number, w: number = -1, h: number = -1) {
@@ -141,6 +107,12 @@ export class Text extends __AssetElement {
 
         this.text = text;
         this.element.innerText = text;
+        this.element.style.userSelect = 'none';
+        document.body.append(this.element);
+    }
+
+    move(x: number, y: number) {
+        super.move(x, y);
     }
 
     updateText(text: string) {
@@ -148,3 +120,10 @@ export class Text extends __AssetElement {
         this.element.innerText = text;
     }
 }
+
+
+export function randomInt(min: number, max: number): number {
+    return Math.floor(Math.random() * max) + min;
+}
+
+
