@@ -32,3 +32,5 @@ cookie.addEvent('click', function (event) {
         clearTimeout(cookieClickDisplayTimeout);
     }, 1000);
 });
+
+;
